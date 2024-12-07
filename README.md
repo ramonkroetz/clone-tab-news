@@ -1,7 +1,8 @@
 # clone-tab-news
 
-## NVM Version (.nvmrc)
+NextJS Page Route + Typescript + Jest
 
-nvm install
-
-## NextJS With Page Route
+```bash
+  # NVM Version (.nvmrc)
+  nvm install
+```
