@@ -18,17 +18,15 @@
       {
         "name": "next"
       }
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    ]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "C:\\Work\\ramonkroetz\\.next/types/**/*.ts"
+    "C:\\Work\\ramonkroetz\\.next/types/**/*.ts",
+    "jest.config.js"
   ],
   "exclude": ["node_modules"]
 }
