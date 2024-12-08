@@ -4,9 +4,12 @@
   "description": "## NVM Version (.nvmrc) nvm install",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev",
+    "dev": "npm run services:up && next dev",
     "lint:check": "prettier --check .",
     "lint:fix": "prettier --write .",
+    "services:down": "docker compose -f infra/compose.yaml down",
+    "services:stop": "docker compose -f infra/compose.yaml stop",
+    "services:up": "docker compose -f infra/compose.yaml up -d",
     "test": "jest",
     "test:watch": "jest --watchAll"
   },
