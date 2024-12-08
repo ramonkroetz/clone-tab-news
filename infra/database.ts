@@ -11,6 +11,7 @@ export async function query<T>(queryObject: string | QueryConfig) {
     user: process.env.POSTGRES_USER,
     database: process.env.POSTGRES_DB,
     password: process.env.POSTGRES_PASSWORD,
+    ssl: process.env.NODE_ENV === 'development' ? false : true,
   })
 
   try {
@@ -19,7 +20,7 @@ export async function query<T>(queryObject: string | QueryConfig) {
     return (await result) as QueryResult<T>
   } catch (error) {
     console.error(error)
-    return { rows: [] } // can return an error
+    throw error
   } finally {
     await client.end()
   }
