@@ -6,6 +6,7 @@ NextJS Page Route + Typescript + Jest + Docker
   # NVM Version (.nvmrc)
   nvm install
 
+  ## Database
   # Docker (compose.yaml) - Install
   docker compose -f infra/compose.yaml up -d
   # Update packages
