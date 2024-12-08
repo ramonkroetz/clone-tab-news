@@ -1,6 +1,10 @@
-import { Client } from 'pg'
+import { Client, QueryConfig } from 'pg'
 
-async function query(queryObject: string) {
+type QueryResult<T> = {
+  rows: T[]
+}
+
+export async function query<T>(queryObject: string | QueryConfig) {
   const client = new Client({
     host: process.env.POSTGRES_HOST,
     port: Number(process.env.POSTGRES_PORT),
@@ -8,12 +12,15 @@ async function query(queryObject: string) {
     database: process.env.POSTGRES_DB,
     password: process.env.POSTGRES_PASSWORD,
   })
-  await client.connect()
-  const result = await client.query(queryObject)
-  await client.end()
-  return result
-}
 
-export default {
-  query,
+  try {
+    await client.connect()
+    const result = await client.query(queryObject)
+    return (await result) as QueryResult<T>
+  } catch (error) {
+    console.error(error)
+    return { rows: [] } // can return an error
+  } finally {
+    await client.end()
+  }
 }
