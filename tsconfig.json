@@ -19,7 +19,13 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "paths": {
+      "@services/*": ["services/*"],
+      "@infra/*": ["infra/*"],
+      "@pages/*": ["pages/*"],
+      "@tests/*": ["tests/*"]
+    }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "jest.config.js"],
   "exclude": ["node_modules"]
