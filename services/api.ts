@@ -1,5 +1,5 @@
-export async function api<T>(url: string) {
-  const response = await fetch(url)
+export async function api<T>(url: string, init?: RequestInit) {
+  const response = await fetch(url, init)
   const data = (await response.json()) as T
 
   return {

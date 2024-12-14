@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { query } from '@infra/database'
+import { query } from 'infra/database'
 
 export type StatusResponse = {
   update_at: string

@@ -1,5 +1,5 @@
-import { StatusResponse } from '@pages/api/v1/status'
-import { api } from '@services/api'
+import { StatusResponse } from 'pages/api/v1/status'
+import { api } from 'services/api'
 
 test('GET to /api/v1/status should return 200', async () => {
   const { data, status } = await api<StatusResponse>('http://localhost:3000/api/v1/status')
