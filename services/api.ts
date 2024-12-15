@@ -1,9 +1,19 @@
 export async function api<T>(url: string, init?: RequestInit) {
-  const response = await fetch(url, init)
-  const data = (await response.json()) as T
+  let response
 
-  return {
-    status: response.status,
-    data,
+  try {
+    response = await fetch(url, init)
+
+    return {
+      status: response.status,
+      data: (await response.json()) as T,
+      error: null,
+    }
+  } catch (error) {
+    return {
+      status: response?.status,
+      data: null,
+      error,
+    }
   }
 }

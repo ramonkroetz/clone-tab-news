@@ -5,12 +5,19 @@ import { api } from 'services/api'
 export async function waitForAllServices() {
   async function waitForWebServer() {
     async function fetchStatusPage() {
-      await api<StatusResponse>('http://localhost:3000/api/v1/status')
+      const { status, error } = await api<StatusResponse>('http://localhost:3000/api/v1/status')
+
+      if (status !== 200) {
+        throw error
+      }
     }
 
     return retry(fetchStatusPage, {
       retries: 100,
       maxTimeout: 1000,
+      onRetry: (error: Error, attempt) => {
+        console.log(`Attempt ${attempt} - Failed to fetch status page: ${error.message}`)
+      },
     })
   }
 
