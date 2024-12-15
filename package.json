@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "npm run services:up && npm run wait-for-postgres && npm run migration:up && next dev",
-    "lint:check": "prettier --check .",
-    "lint:fix": "prettier --write .",
+    "lint:prettier:check": "prettier --check .",
+    "lint:prettier:fix": "prettier --write .",
     "migration:create": "node-pg-migrate -m infra/migrations -j sql create",
     "migration:up": "node-pg-migrate -m infra/migrations --envPath .env.development --language ts up",
     "services:down": "docker compose -f infra/compose.yaml down",
