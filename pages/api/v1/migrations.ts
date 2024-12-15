@@ -4,33 +4,46 @@ import { join } from 'node:path'
 import { getNewClient } from 'infra/database'
 
 export default async function migrations(request: NextApiRequest, response: NextApiResponse) {
-  const dbClient = await getNewClient()
+  const allowedMethods = ['GET', 'POST']
 
-  const options: RunnerOption = {
-    dbClient,
-    databaseUrl: process.env.DATABASE_URL || '',
-    dir: join('infra', 'migrations'),
-    direction: 'up',
-    verbose: true,
-    migrationsTable: 'pgmigrations',
+  if (!allowedMethods.includes(request.method || '')) {
+    return response.status(405).json({
+      error: `Method ${request.method} not allowed`,
+    })
   }
 
-  if (request.method === 'GET') {
-    const pedingMigrations = await migrationRunner({ ...options, dryRun: true })
-    await dbClient.end()
-    return response.status(200).json(pedingMigrations)
-  }
+  let dbClient
 
-  if (request.method === 'POST') {
-    const migratedMigrations = await migrationRunner({ ...options, dryRun: false })
-    await dbClient.end()
+  try {
+    dbClient = await getNewClient()
 
-    if (migratedMigrations.length > 0) {
-      return response.status(201).json(migratedMigrations)
+    const options: RunnerOption = {
+      dbClient,
+      databaseUrl: process.env.DATABASE_URL || '',
+      dir: join('infra', 'migrations'),
+      direction: 'up',
+      verbose: true,
+      migrationsTable: 'pgmigrations',
     }
 
-    return response.status(200).json(migratedMigrations)
-  }
+    if (request.method === 'GET') {
+      const pedingMigrations = await migrationRunner({ ...options, dryRun: true })
+      return response.status(200).json(pedingMigrations)
+    }
 
-  return response.status(405).end()
+    if (request.method === 'POST') {
+      const migratedMigrations = await migrationRunner({ ...options, dryRun: false })
+
+      if (migratedMigrations.length > 0) {
+        return response.status(201).json(migratedMigrations)
+      }
+
+      return response.status(200).json(migratedMigrations)
+    }
+  } catch (error) {
+    console.error(error)
+    throw error
+  } finally {
+    dbClient?.end()
+  }
 }
