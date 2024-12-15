@@ -1,12 +1,12 @@
 import { api } from 'services/api'
 import { RunMigration } from 'node-pg-migrate/dist/migration'
 import { query } from 'infra/database'
+import { waitForAllServices } from 'tests/orchestrator'
 
-async function cleanDatabase() {
+beforeAll(async () => {
+  await waitForAllServices()
   await query('drop schema public cascade; create schema public;')
-}
-
-beforeAll(cleanDatabase)
+})
 
 test('GET to /api/v1/migrations should return 200', async () => {
   const { data, status } = await api<RunMigration[]>('http://localhost:3000/api/v1/migrations')
