@@ -1,11 +1,10 @@
 import { api } from 'services/api'
 import { RunMigration } from 'node-pg-migrate/dist/migration'
-import { query } from 'infra/database'
-import { waitForAllServices } from 'tests/orchestrator'
+import { waitForAllServices, clearDatabase } from 'tests/orchestrator'
 
 beforeAll(async () => {
   await waitForAllServices()
-  await query('drop schema public cascade; create schema public;')
+  await clearDatabase()
 })
 
 describe('GET /api/v1/migrations', () => {
@@ -49,15 +48,19 @@ describe('POST /api/v1/migrations', () => {
   })
 })
 
-describe('PUT /api/v1/migrations', () => {
+describe('Method not allowed /api/v1/migrations', () => {
   describe('Anonymous user', () => {
     test('Running pending migrations', async () => {
-      const { status, error } = await api<RunMigration[]>('http://localhost:3000/api/v1/migrations', {
-        method: 'PUT',
-      })
+      const notAllowedMethods = ['PUT', 'DELETE', 'OPTIONS', 'PATCH']
 
-      expect(status).toBe(405)
-      expect(error).toBe('Method PUT not allowed')
+      notAllowedMethods.forEach(async (method) => {
+        const { status, error } = await api<RunMigration[]>('http://localhost:3000/api/v1/migrations', {
+          method,
+        })
+
+        expect(status).toBe(405)
+        expect(error).toBe(`Method ${method} not allowed`)
+      })
     })
   })
 })
