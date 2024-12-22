@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "npm run services:up && npm run wait-for-postgres && npm run migration:up && next dev",
+    "dev": "npm run services:up && npm run services:wait:database && npm run migration:up && next dev",
     "ci": "npm run lint:eslint:check && npm run lint:prettier:check && npm run typecheck && npm run test",
     "commit": "cz",
     "lint:eslint:check": "next lint --dir .",
@@ -17,10 +17,10 @@
     "services:down": "docker compose -f infra/compose.yaml down",
     "services:stop": "docker compose -f infra/compose.yaml stop",
     "services:up": "docker compose -f infra/compose.yaml up -d",
+    "services:wait:database": "node --no-warnings=ExperimentalWarning --loader ts-node/esm infra/scripts/wait-for-postgres.ts",
     "test": "npm run services:up && concurrently -n next,jest --hide next -k -s command-jest \"next dev\" \"jest --runInBand --verbose\"",
     "test:watch": "jest --watchAll --runInBand",
-    "typecheck": "tsc",
-    "wait-for-postgres": "node --no-warnings=ExperimentalWarning --loader ts-node/esm infra/scripts/wait-for-postgres.ts"
+    "typecheck": "tsc"
   },
   "author": "",
   "license": "MIT",
