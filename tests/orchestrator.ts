@@ -1,4 +1,5 @@
 import retry from 'async-retry'
+import { query } from 'infra/database'
 import { StatusResponse } from 'pages/api/v1/status'
 import { api } from 'services/api'
 
@@ -22,4 +23,8 @@ export async function waitForAllServices() {
   }
 
   await waitForWebServer()
+}
+
+export async function clearDatabase() {
+  await query('drop schema public cascade; create schema public;')
 }

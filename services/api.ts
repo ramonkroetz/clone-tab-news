@@ -4,9 +4,15 @@ export async function api<T>(url: string, init?: RequestInit) {
   try {
     response = await fetch(url, init)
 
+    const data = (await response.json()) as T & { error: string }
+
+    if (data.error) {
+      throw data.error
+    }
+
     return {
       status: response.status,
-      data: (await response.json()) as T,
+      data,
       error: null,
     }
   } catch (error) {
