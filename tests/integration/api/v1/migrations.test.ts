@@ -9,7 +9,7 @@ beforeAll(async () => {
 
 describe('GET /api/v1/migrations', () => {
   describe('Anonymous user', () => {
-    test('Running pending migrations', async () => {
+    test('Retrieving pending migrations', async () => {
       const { data, status, error } = await api<RunMigration[]>('http://localhost:3000/api/v1/migrations')
 
       expect(status).toBe(200)
@@ -22,7 +22,7 @@ describe('GET /api/v1/migrations', () => {
 
 describe('POST /api/v1/migrations', () => {
   describe('Anonymous user', () => {
-    describe('Running pending migrations', () => {
+    describe('Retrieving pending migrations', () => {
       test('For the first time', async () => {
         const { data, status, error } = await api<RunMigration[]>('http://localhost:3000/api/v1/migrations', {
           method: 'POST',
@@ -50,7 +50,7 @@ describe('POST /api/v1/migrations', () => {
 
 describe('Method not allowed /api/v1/migrations', () => {
   describe('Anonymous user', () => {
-    test('Running pending migrations', async () => {
+    test('Retrieving pending migrations', async () => {
       const notAllowedMethods = ['PUT', 'DELETE', 'OPTIONS', 'PATCH']
 
       notAllowedMethods.forEach(async (method) => {
