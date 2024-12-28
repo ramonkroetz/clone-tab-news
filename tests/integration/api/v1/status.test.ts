@@ -1,5 +1,5 @@
 import { StatusResponse } from 'pages/api/v1/status'
-import { api } from 'services/api'
+import { api } from 'helpers/api'
 import { waitForAllServices } from 'tests/orchestrator'
 
 beforeAll(async () => {
