@@ -8,9 +8,13 @@ type UseAPIConfig = {
 
 export function useApi<T>(url: string, { configFetch, configSWR }: UseAPIConfig) {
   async function fetcher() {
-    const response = await api<T>(url, configFetch)
-    if (response.error) throw response.error
-    return response.data as T
+    const { data, error } = await api<T>(url, configFetch)
+
+    if (error instanceof Error) {
+      throw new Error(error.message)
+    }
+
+    return data as T
   }
 
   return useSWR<T, Error | string>(url, fetcher, configSWR)

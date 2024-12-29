@@ -1,4 +1,10 @@
-export async function api<T>(url: string, init?: RequestInit) {
+type ApiResponse<T> = {
+  status?: number
+  data: T | null
+  error: unknown
+}
+
+export async function api<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
   let response
 
   try {
@@ -7,7 +13,7 @@ export async function api<T>(url: string, init?: RequestInit) {
     const data = (await response.json()) as T & { error: string }
 
     if (data.error) {
-      throw data.error
+      throw new Error(data.error)
     }
 
     return {

@@ -59,7 +59,10 @@ describe('Method not allowed /api/v1/migrations', () => {
         })
 
         expect(status).toBe(405)
-        expect(error).toBe(`Method ${method} not allowed`)
+        expect(error instanceof Error).toBe(true)
+        if (error instanceof Error) {
+          expect(error.message).toBe(`Method ${method} not allowed`)
+        }
       })
     })
   })
