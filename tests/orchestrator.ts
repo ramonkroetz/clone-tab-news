@@ -1,7 +1,7 @@
 import retry from 'async-retry'
 import { query } from 'infra/database'
 import { StatusResponse } from 'pages/api/v1/status'
-import { api } from 'helpers/api'
+import { api } from 'infra/api'
 
 export async function waitForAllServices() {
   async function waitForWebServer() {
