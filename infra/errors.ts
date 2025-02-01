@@ -5,8 +5,10 @@ type ErrorInfo = {
   status_code: number
 }
 
-export function checkIfIsError(data: any) {
-  return typeof data === 'object' && data.name && data.message && data.action && data.status_code
+export function checkIfIsError(data: unknown) {
+  return (
+    typeof data === 'object' && data && 'name' in data && 'message' in data && 'action' in data && 'status_code' in data
+  )
 }
 
 export class InternalServerError extends Error {
