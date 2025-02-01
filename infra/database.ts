@@ -1,4 +1,5 @@
 import { Client, QueryConfig } from 'pg'
+import { ServiceError } from './errors'
 
 type QueryResult<T> = {
   rows: T[]
@@ -26,8 +27,8 @@ export async function query<T>(queryObject: string | QueryConfig) {
     const result = await client.query(queryObject)
     return (await result) as QueryResult<T>
   } catch (error) {
-    console.error(error)
-    throw error
+    const serviceErrorObject = new ServiceError({ cause: error, message: 'Database or query connection error.' })
+    throw serviceErrorObject
   } finally {
     await client?.end()
   }

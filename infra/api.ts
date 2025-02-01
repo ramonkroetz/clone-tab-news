@@ -1,3 +1,5 @@
+import { checkIfIsError } from 'infra/errors'
+
 type ApiResponse<T> = {
   status?: number
   data: T | null
@@ -10,10 +12,10 @@ export async function api<T>(url: string, init?: RequestInit): Promise<ApiRespon
   try {
     response = await fetch(url, init)
 
-    const data = (await response.json()) as T & { error: string }
+    const data = await response.json()
 
-    if (data.error) {
-      throw new Error(data.error)
+    if (checkIfIsError(data)) {
+      throw data
     }
 
     return {

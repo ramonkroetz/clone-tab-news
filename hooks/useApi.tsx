@@ -1,4 +1,4 @@
-import { api } from 'helpers/api'
+import { api } from 'infra/api'
 import useSWR, { SWRConfiguration } from 'swr'
 
 type UseAPIConfig = {
