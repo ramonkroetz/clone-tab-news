@@ -1,4 +1,5 @@
 import { Client, QueryConfig } from 'pg'
+
 import { ServiceError } from './errors'
 
 type QueryResult<T> = {
@@ -20,7 +21,7 @@ export async function getNewClient() {
 }
 
 export async function query<T>(queryObject: string | QueryConfig) {
-  let client
+  let client: Client | null = null
 
   try {
     client = await getNewClient()

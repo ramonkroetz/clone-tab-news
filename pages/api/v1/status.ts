@@ -1,7 +1,7 @@
-import { createRouter } from 'next-connect'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { query } from 'infra/database'
 import { errorHandlers } from 'infra/controller'
+import { query } from 'infra/database'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { createRouter } from 'next-connect'
 
 export type StatusResponse = {
   update_at: string
@@ -16,7 +16,7 @@ export type StatusResponse = {
 
 const router = createRouter<NextApiRequest, NextApiResponse>()
 
-router.get(async (request: NextApiRequest, response: NextApiResponse) => {
+router.get(async (_: NextApiRequest, response: NextApiResponse) => {
   const udpateAt = new Date().toISOString()
   const databaseVersionResult = await query<{ server_version: string }>('SHOW server_version;')
   const databaseMaxConnectionResult = await query<{ max_connections: string }>('SHOW max_connections;')
