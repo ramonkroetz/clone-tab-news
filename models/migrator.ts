@@ -12,7 +12,7 @@ const options: RunnerOption = {
 
 export async function listPendingMigrations() {
   let dbClient
-  
+
   try {
     dbClient = await getNewClient()
 
@@ -26,7 +26,7 @@ export async function listPendingMigrations() {
 
 export async function runPendingMigrations() {
   let dbClient
-  
+
   try {
     dbClient = await getNewClient()
 
