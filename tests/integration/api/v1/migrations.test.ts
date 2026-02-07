@@ -1,6 +1,6 @@
 import { api } from 'infra/api'
 import type { Migration } from 'node-pg-migrate'
-import { waitForAllServices, clearDatabase } from 'tests/orchestrator'
+import { clearDatabase, waitForAllServices } from 'tests/orchestrator'
 
 beforeAll(async () => {
   await waitForAllServices()

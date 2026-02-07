@@ -1,6 +1,8 @@
 import { resolve } from 'node:path'
-import { type RunnerOption, runner } from 'node-pg-migrate'
+
 import { getNewClient } from 'infra/database'
+import { type RunnerOption, runner } from 'node-pg-migrate'
+import { Client } from 'pg'
 
 const options: RunnerOption = {
   databaseUrl: process.env.DATABASE_URL || '',
@@ -11,7 +13,7 @@ const options: RunnerOption = {
 }
 
 export async function listPendingMigrations() {
-  let dbClient
+  let dbClient: Client | null = null
 
   try {
     dbClient = await getNewClient()
@@ -25,7 +27,7 @@ export async function listPendingMigrations() {
 }
 
 export async function runPendingMigrations() {
-  let dbClient
+  let dbClient: Client | null = null
 
   try {
     dbClient = await getNewClient()

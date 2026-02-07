@@ -7,7 +7,7 @@ type ApiResponse<T> = {
 }
 
 export async function api<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
-  let response
+  let response: Response | null = null
 
   try {
     response = await fetch(url, init)

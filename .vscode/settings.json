@@ -1,0 +1,40 @@
+{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.tabSize": 2,
+  "files.eol": "\n",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit",
+    "source.action.useSortedAttributes.biome": "explicit"
+  },
+  "[svg]": {
+    "editor.defaultFormatter": "jock.svg"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[postcss]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": ".*\\.(css|module.css)$",
+        "runIn": "terminal",
+        "cmd": "npm run css:format -- \"${file}\""
+      }
+    ]
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "ignoreUnknown": false,
+    "includes": ["**", "!.next", "!node_modules", "!dist"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "lineWidth": 120,
+    "lineEnding": "lf"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "performance": {
+        "noAccumulatingSpread": "off"
+      },
+      "style": {
+        "useImportType": "off"
+      },
+      "suspicious": {
+        "noConsole": "off"
+      },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedLabels": "error",
+        "noUnusedVariables": "error",
+        "noUnusedFunctionParameters": "error"
+      },
+      "nursery": {
+        "noImportCycles": "error"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded"
+    }
+  },
+  "css": {
+    "formatter": {
+      "quoteStyle": "single",
+      "lineEnding": "lf"
+    },
+    "parser": {
+      "cssModules": true
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "useSortedAttributes": "on",
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              [":URL:", "!**/*.css"],
+              [":NODE:"],
+              ":BLANK_LINE:",
+              [":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:", "!**/*.css"],
+              ":BLANK_LINE:",
+              [":ALIAS:", "!**/*.css"],
+              [":PATH:", "!**/*.css"],
+              ":BLANK_LINE:",
+              ["**/*.css"]
+            ]
+          }
+        }
+      }
+    }
+  }
+}
