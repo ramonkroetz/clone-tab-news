@@ -1,5 +1,5 @@
 import { api } from 'infra/api'
-import { RunMigration } from 'node-pg-migrate/dist/migration'
+import type { Migration } from 'node-pg-migrate'
 import { waitForAllServices, clearDatabase } from 'tests/orchestrator'
 
 beforeAll(async () => {
@@ -10,7 +10,7 @@ beforeAll(async () => {
 describe('GET /api/v1/migrations', () => {
   describe('Anonymous user', () => {
     test('Retrieving pending migrations', async () => {
-      const { data, status, error } = await api<RunMigration[]>('http://localhost:3000/api/v1/migrations')
+      const { data, status, error } = await api<Migration[]>('http://localhost:3000/api/v1/migrations')
 
       expect(status).toEqual(200)
       expect(error).toEqual(null)
@@ -24,7 +24,7 @@ describe('POST /api/v1/migrations', () => {
   describe('Anonymous user', () => {
     describe('Retrieving pending migrations', () => {
       test('For the first time', async () => {
-        const { data, status, error } = await api<RunMigration[]>('http://localhost:3000/api/v1/migrations', {
+        const { data, status, error } = await api<Migration[]>('http://localhost:3000/api/v1/migrations', {
           method: 'POST',
         })
 
@@ -35,7 +35,7 @@ describe('POST /api/v1/migrations', () => {
       })
 
       test('For the second time', async () => {
-        const { data, status, error } = await api<RunMigration[]>('http://localhost:3000/api/v1/migrations', {
+        const { data, status, error } = await api<Migration[]>('http://localhost:3000/api/v1/migrations', {
           method: 'POST',
         })
 
@@ -54,7 +54,7 @@ describe('Method not allowed /api/v1/migrations', () => {
       const notAllowedMethods = ['PUT', 'DELETE', 'OPTIONS', 'PATCH']
 
       notAllowedMethods.forEach(async (method) => {
-        const { status, error } = await api<RunMigration[]>('http://localhost:3000/api/v1/migrations', {
+        const { status, error } = await api<Migration[]>('http://localhost:3000/api/v1/migrations', {
           method,
         })
 

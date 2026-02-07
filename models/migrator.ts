@@ -1,5 +1,5 @@
 import { resolve } from 'node:path'
-import migrationRunner, { RunnerOption } from 'node-pg-migrate'
+import { type RunnerOption, runner } from 'node-pg-migrate'
 import { getNewClient } from 'infra/database'
 
 const options: RunnerOption = {
@@ -16,7 +16,7 @@ export async function listPendingMigrations() {
   try {
     dbClient = await getNewClient()
 
-    const pedingMigrations = await migrationRunner({ ...options, dryRun: true, dbClient })
+    const pedingMigrations = await runner({ ...options, dryRun: true, dbClient })
 
     return pedingMigrations
   } finally {
@@ -30,7 +30,7 @@ export async function runPendingMigrations() {
   try {
     dbClient = await getNewClient()
 
-    const migratedMigrations = await migrationRunner({ ...options, dryRun: false, dbClient })
+    const migratedMigrations = await runner({ ...options, dryRun: false, dbClient })
 
     return migratedMigrations
   } finally {
