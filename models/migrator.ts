@@ -7,7 +7,7 @@ import { Client } from 'pg'
 
 const options: RunnerOption = {
   databaseUrl: process.env.DATABASE_URL || '',
-  dir: resolve('infra', 'migrations'),
+  dir: resolve(process.cwd(), 'infra', 'migrations'),
   direction: 'up',
   verbose: true,
   migrationsTable: 'pgmigrations',
