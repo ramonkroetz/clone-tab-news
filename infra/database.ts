@@ -7,24 +7,13 @@ type QueryResult<T> = {
 }
 
 export async function getNewClient() {
-  const connectionString = process.env.DATABASE_URL
-  const isProduction = process.env.NODE_ENV === 'production'
-
-  const optionsClient = connectionString
-    ? {
-        connectionString,
-      }
-    : {
-        host: process.env.POSTGRES_HOST,
-        port: Number(process.env.POSTGRES_PORT),
-        user: process.env.POSTGRES_USER,
-        database: process.env.POSTGRES_DB,
-        password: process.env.POSTGRES_PASSWORD,
-      }
-
   const client = new Client({
-    ...optionsClient,
-    ssl: isProduction ? { rejectUnauthorized: false } : false,
+    host: process.env.POSTGRES_HOST,
+    port: Number(process.env.POSTGRES_PORT),
+    user: process.env.POSTGRES_USER,
+    database: process.env.POSTGRES_DB,
+    password: process.env.POSTGRES_PASSWORD,
+    ssl: process.env.NODE_ENV === 'production' || false,
   })
 
   await client.connect()

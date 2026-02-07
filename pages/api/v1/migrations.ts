@@ -6,8 +6,8 @@ import { createRouter } from 'next-connect'
 const router = createRouter<NextApiRequest, NextApiResponse>()
 
 router.get(async (_: NextApiRequest, response: NextApiResponse) => {
-  const pedingMigrations = await listPendingMigrations()
-  return response.status(200).json(pedingMigrations)
+  const pendingMigrations = await listPendingMigrations()
+  return response.status(200).json(pendingMigrations)
 })
 
 router.post(async (_: NextApiRequest, response: NextApiResponse) => {
