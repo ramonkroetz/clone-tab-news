@@ -20,4 +20,4 @@ router.post(async (_: NextApiRequest, response: NextApiResponse) => {
   return response.status(200).json(migratedMigrations)
 })
 
-// export default router.handler(errorHandlers)
+export default router.handler()
