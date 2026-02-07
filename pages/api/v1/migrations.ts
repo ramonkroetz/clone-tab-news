@@ -1,4 +1,4 @@
-import { errorHandlers } from 'infra/controller'
+// import { errorHandlers } from 'infra/controller'
 import { listPendingMigrations, runPendingMigrations } from 'models/migrator'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createRouter } from 'next-connect'
@@ -20,4 +20,4 @@ router.post(async (_: NextApiRequest, response: NextApiResponse) => {
   return response.status(200).json(migratedMigrations)
 })
 
-export default router.handler(errorHandlers)
+// export default router.handler(errorHandlers)
