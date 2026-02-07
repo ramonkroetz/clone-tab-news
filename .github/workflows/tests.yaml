@@ -13,6 +13,7 @@ jobs:
         with:
           node-version: lts/hydrogen
 
+      - run: nvm install
+      - run: nvm use
       - run: npm ci
-
       - run: npm test
