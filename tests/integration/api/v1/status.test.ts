@@ -1,9 +1,9 @@
 import { api } from 'infra/api'
 import { StatusResponse } from 'pages/api/v1/status'
 import { waitForAllServices } from 'tests/orchestrator'
-import { beforeAll, describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test } from 'vitest'
 
-beforeAll(async () => {
+beforeEach(async () => {
   await waitForAllServices()
 })
 
