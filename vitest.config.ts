@@ -13,6 +13,7 @@ export default defineConfig({
     environment: 'node',
     testTimeout: 60000,
     hookTimeout: 60000,
+    fileParallelism: false,
   },
   resolve: {
     alias: {
