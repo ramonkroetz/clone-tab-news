@@ -1,5 +1,5 @@
 import { query } from 'infra/database'
-import { ValidationError } from 'infra/errors'
+import { NotFoundError, ValidationError } from 'infra/errors'
 
 export type User = {
   id: string
@@ -29,6 +29,31 @@ export async function create(userInputValues: Partial<User>): Promise<User> {
   return results.rows[0]
 }
 
+export async function findOneByUsername(username?: string): Promise<User | null> {
+  const results = await query<User>({
+    text: `
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        LOWER(username) = LOWER($1)
+      LIMIT
+        1
+      ;`,
+    values: [username],
+  })
+
+  if (results.rowCount === 0) {
+    throw new NotFoundError({
+      message: 'User not found.',
+      action: 'Check the username and try again.',
+    })
+  }
+
+  return results.rows[0]
+}
+
 async function validateUniqueEmail(email?: string) {
   const results = await query<{ email: string }>({
     text: `
@@ -42,8 +67,6 @@ async function validateUniqueEmail(email?: string) {
     values: [email],
   })
 
-  console.dir(results)
-
   if ((results.rowCount ?? 1) > 0) {
     throw new ValidationError({
       message: 'Email already exists.',
@@ -52,7 +75,7 @@ async function validateUniqueEmail(email?: string) {
   }
 }
 
-export async function validateUniqueUsername(username?: string) {
+async function validateUniqueUsername(username?: string) {
   const results = await query<{ username: string }>({
     text: `
       SELECT

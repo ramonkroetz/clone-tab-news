@@ -2,9 +2,9 @@ import { api } from 'infra/api'
 import { User } from 'models/user'
 import { clearDatabase, runPendingMigrations, waitForAllServices } from 'tests/orchestrator'
 import { version as uuidVersion } from 'uuid'
-import { beforeAll, describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test } from 'vitest'
 
-beforeAll(async () => {
+beforeEach(async () => {
   await waitForAllServices()
   await clearDatabase()
   await runPendingMigrations()
@@ -111,6 +111,87 @@ describe('POST /api/v1/user', () => {
         message: 'Username already exists.',
         action: 'Use another username.',
         status_code: 400,
+      })
+    })
+  })
+})
+
+describe('GET /api/v1/users/[username]', () => {
+  describe('Anonymous user', () => {
+    test('With exact case match', async () => {
+      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'ramonkroetz',
+          email: 'asd@asd.com',
+          password: 'password123',
+        }),
+      })
+
+      expect(status).toEqual(201)
+
+      const { status: statusGet, data } = await api<User>('http://localhost:3000/api/v1/users/ramonkroetz')
+
+      expect(statusGet).toEqual(200)
+      expect(data).not.toBeNull()
+      if (data) {
+        expect(data).toEqual({
+          id: data.id,
+          username: 'ramonkroetz',
+          email: 'asd@asd.com',
+          password: 'password123',
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+        })
+        expect(uuidVersion(data.id)).toBe(4)
+        expect(Date.parse(data.created_at)).not.toBeNaN()
+        expect(Date.parse(data.updated_at)).not.toBeNaN()
+      }
+    })
+
+    test('With case mismatch', async () => {
+      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'ramonkroetz',
+          email: 'asd@asd.com',
+          password: 'password123',
+        }),
+      })
+
+      expect(status).toEqual(201)
+
+      const { status: statusGet, data } = await api<User>('http://localhost:3000/api/v1/users/RAMONKroetz')
+
+      expect(statusGet).toEqual(200)
+      expect(data).not.toBeNull()
+      if (data) {
+        expect(data).toEqual({
+          id: data.id,
+          username: 'ramonkroetz',
+          email: 'asd@asd.com',
+          password: 'password123',
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+        })
+        expect(uuidVersion(data.id)).toBe(4)
+        expect(Date.parse(data.created_at)).not.toBeNaN()
+        expect(Date.parse(data.updated_at)).not.toBeNaN()
+      }
+    })
+
+    test('With nonexistent username', async () => {
+      const { status, data, error } = await api<User>('http://localhost:3000/api/v1/users/userdoesnotexist')
+
+      expect(status).toEqual(404)
+      expect(data).toBeNull()
+      expect(error).toEqual({
+        name: 'NotFoundError',
+        message: 'User not found.',
+        action: 'Check the username and try again.',
+        status_code: 404,
       })
     })
   })
