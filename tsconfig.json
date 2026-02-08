@@ -22,13 +22,6 @@
       }
     ]
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "jest.config.ts",
-    "infra/migrations/**/*.ts"
-  ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "include": ["next-env.d.ts", "**/*.mts", "**/*.ts", "**/*.tsx", "vitest.config.ts"]
 }
