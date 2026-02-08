@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
-import { InternalServerError, MethodNotAllowedError, ValidationError } from './errors'
+import { InternalServerError, MethodNotAllowedError, NotFoundError, ValidationError } from './errors'
 
 function onNoMatch(_request: NextApiRequest, response: NextApiResponse) {
   const publicErrorObject = new MethodNotAllowedError()
@@ -8,7 +8,7 @@ function onNoMatch(_request: NextApiRequest, response: NextApiResponse) {
 }
 
 function onError(error: unknown, _request: NextApiRequest, response: NextApiResponse) {
-  if (error instanceof ValidationError) {
+  if (error instanceof ValidationError || error instanceof NotFoundError) {
     return response.status(error.statusCode).json(error)
   }
 
