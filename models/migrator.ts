@@ -9,7 +9,7 @@ const options: RunnerOption = {
   databaseUrl: process.env.DATABASE_URL || '',
   dir: resolve(process.cwd(), 'infra', 'migrations'),
   direction: 'up',
-  verbose: true,
+  log: () => {},
   migrationsTable: 'pgmigrations',
 }
 

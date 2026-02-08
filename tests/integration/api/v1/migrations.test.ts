@@ -1,6 +1,7 @@
 import { api } from 'infra/api'
 import type { Migration } from 'node-pg-migrate'
 import { clearDatabase, waitForAllServices } from 'tests/orchestrator'
+import { beforeAll, describe, expect, test } from 'vitest'
 
 beforeAll(async () => {
   await waitForAllServices()
