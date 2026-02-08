@@ -1,10 +1,6 @@
-import { Client, QueryConfig } from 'pg'
+import { Client, QueryConfig, QueryResult, QueryResultRow } from 'pg'
 
 import { ServiceError } from './errors'
-
-type QueryResult<T> = {
-  rows: T[]
-}
 
 export async function getNewClient() {
   const client = new Client({
@@ -20,7 +16,7 @@ export async function getNewClient() {
   return client
 }
 
-export async function query<T>(queryObject: string | QueryConfig) {
+export async function query<T extends QueryResultRow>(queryObject: string | QueryConfig) {
   let client: Client | null = null
 
   try {
