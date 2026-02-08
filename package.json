@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "npm run services:up && npm run services:wait:database && npm run migrations:up && next dev",
-    "test": "npm run services:up && npm run services:wait:database && concurrently -n next,vitest --hide next -k -s command-vitest \"next dev\" \"vitest run\"",
+    "concurrently": "concurrently -s first -P -k -n next,vitest \"npm run next\" \"vitest run\"",
+    "test": "npm run concurrently -- --hide next",
     "posttest": "npm run services:stop",
     "test:watch": "vitest --watch",
     "services:up": "docker compose -f infra/compose.yaml up -d",
