@@ -75,3 +75,24 @@ export class ServiceError extends Error {
     }
   }
 }
+
+export class ValidationError extends Error {
+  action: string
+  statusCode: number
+
+  constructor({ cause, message, action }: { cause?: unknown; message: string; action: string }) {
+    super(message || 'Service unavailable.', { cause })
+    this.name = 'ValidationError'
+    this.action = action || 'Check if the input values are correct.'
+    this.statusCode = 400
+  }
+
+  toJSON(): ErrorInfo {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    }
+  }
+}
