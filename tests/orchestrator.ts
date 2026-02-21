@@ -1,7 +1,9 @@
+import { faker } from '@faker-js/faker'
 import retry from 'async-retry'
 import { api } from 'infra/api'
 import { query } from 'infra/database'
-import { Migration } from 'node-pg-migrate'
+import { runPendingMigrations as runPendingMigrationsModel } from 'models/migrator'
+import { createUser, User } from 'models/user'
 import { StatusResponse } from 'pages/api/v1/status'
 
 export async function waitForAllServices() {
@@ -31,7 +33,13 @@ export async function clearDatabase() {
 }
 
 export async function runPendingMigrations() {
-  await api<Migration[]>('http://localhost:3000/api/v1/migrations', {
-    method: 'POST',
+  await runPendingMigrationsModel()
+}
+
+export async function createUserTest(user: Partial<User>) {
+  return await createUser({
+    password: user.password || 'validpassword',
+    username: user.username || faker.internet.username().replace(/[_.-]/g, ''),
+    email: user.email || faker.internet.email(),
   })
 }
