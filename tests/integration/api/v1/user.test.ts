@@ -41,9 +41,11 @@ describe('POST /api/v1/user', () => {
       }
 
       const userInDatabase = await findOneByUsername('ramonkroetz')
+
       const passwordMatch = await passwordCompare('password123', userInDatabase?.password || '')
-      const incorrectPasswordMatch = await passwordCompare('wrongpassword', userInDatabase?.password || '')
       expect(passwordMatch).toBe(true)
+
+      const incorrectPasswordMatch = await passwordCompare('wrongpassword', userInDatabase?.password || '')
       expect(incorrectPasswordMatch).toBe(false)
     })
 
@@ -200,6 +202,248 @@ describe('GET /api/v1/users/[username]', () => {
         action: 'Check the username and try again.',
         status_code: 404,
       })
+    })
+  })
+})
+
+describe('PATCH /api/v1/users/[username]', () => {
+  describe('Anonymous user', () => {
+    test('With nonexistent username', async () => {
+      const { status, data, error } = await api<User>('http://localhost:3000/api/v1/users/nonexistentuser', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'newemail@asd.com',
+        }),
+      })
+
+      expect(status).toEqual(404)
+      expect(data).toBeNull()
+      expect(error).toEqual({
+        name: 'NotFoundError',
+        message: 'User not found.',
+        action: 'Check the username and try again.',
+        status_code: 404,
+      })
+    })
+
+    test('With duplicate username', async () => {
+      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'user1',
+          email: 'user1@asd.com',
+          password: 'password123',
+        }),
+      })
+
+      expect(status).toEqual(201)
+
+      const { status: status2 } = await api<User>('http://localhost:3000/api/v1/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'user2',
+          email: 'user2@asd.com',
+          password: 'password123',
+        }),
+      })
+
+      expect(status2).toEqual(201)
+
+      const {
+        status: status3,
+        data: data3,
+        error: error3,
+      } = await api<User>('http://localhost:3000/api/v1/users/user2', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'user1',
+        }),
+      })
+
+      expect(status3).toEqual(400)
+      expect(data3).toBeNull()
+      expect(error3).toEqual({
+        name: 'ValidationError',
+        message: 'Username already exists.',
+        action: 'Use another username.',
+        status_code: 400,
+      })
+    })
+
+    test('With duplicate email', async () => {
+      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'user1',
+          email: 'user1@asd.com',
+          password: 'password123',
+        }),
+      })
+
+      expect(status).toEqual(201)
+
+      const { status: status2 } = await api<User>('http://localhost:3000/api/v1/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'user2',
+          email: 'user2@asd.com',
+          password: 'password123',
+        }),
+      })
+
+      expect(status2).toEqual(201)
+
+      const {
+        status: status3,
+        data: data3,
+        error: error3,
+      } = await api<User>('http://localhost:3000/api/v1/users/user2', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'user1@asd.com',
+        }),
+      })
+
+      expect(status3).toEqual(400)
+      expect(data3).toBeNull()
+      expect(error3).toEqual({
+        name: 'ValidationError',
+        message: 'Email already exists.',
+        action: 'Use another email.',
+        status_code: 400,
+      })
+    })
+
+    test('With unique username', async () => {
+      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'user1',
+          email: 'user1@asd.com',
+          password: 'password123',
+        }),
+      })
+
+      expect(status).toEqual(201)
+
+      const { status: status2, data: data2 } = await api<User>('http://localhost:3000/api/v1/users/user1', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'user2',
+        }),
+      })
+
+      expect(status2).toEqual(200)
+      expect(data2).not.toBeNull()
+      if (data2) {
+        expect(data2).toEqual({
+          id: data2.id,
+          username: 'user2',
+          email: 'user1@asd.com',
+          password: data2.password,
+          created_at: data2.created_at,
+          updated_at: data2.updated_at,
+        })
+        expect(uuidVersion(data2.id)).toBe(4)
+        expect(Date.parse(data2.created_at)).not.toBeNaN()
+        expect(Date.parse(data2.updated_at)).not.toBeNaN()
+        expect(data2.updated_at > data2.created_at).toBe(true)
+      }
+    })
+
+    test('With unique email', async () => {
+      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'user1',
+          email: 'user1@asd.com',
+          password: 'password123',
+        }),
+      })
+
+      expect(status).toEqual(201)
+
+      const { status: status2, data: data2 } = await api<User>('http://localhost:3000/api/v1/users/user1', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'user2@asd.com',
+        }),
+      })
+
+      expect(status2).toEqual(200)
+      expect(data2).not.toBeNull()
+      if (data2) {
+        expect(data2).toEqual({
+          id: data2.id,
+          username: 'user1',
+          email: 'user2@asd.com',
+          password: data2.password,
+          created_at: data2.created_at,
+          updated_at: data2.updated_at,
+        })
+        expect(uuidVersion(data2.id)).toBe(4)
+        expect(Date.parse(data2.created_at)).not.toBeNaN()
+        expect(Date.parse(data2.updated_at)).not.toBeNaN()
+        expect(data2.updated_at > data2.created_at).toBe(true)
+      }
+    })
+
+    test('With new password', async () => {
+      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'user1',
+          email: 'user1@asd.com',
+          password: 'password123',
+        }),
+      })
+
+      expect(status).toEqual(201)
+
+      const { status: status2, data: data2 } = await api<User>('http://localhost:3000/api/v1/users/user1', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: 'newpassword123',
+        }),
+      })
+
+      expect(status2).toEqual(200)
+      expect(data2).not.toBeNull()
+      if (data2) {
+        expect(data2).toEqual({
+          id: data2.id,
+          username: 'user1',
+          email: 'user1@asd.com',
+          password: data2.password,
+          created_at: data2.created_at,
+          updated_at: data2.updated_at,
+        })
+        expect(uuidVersion(data2.id)).toBe(4)
+        expect(Date.parse(data2.created_at)).not.toBeNaN()
+        expect(Date.parse(data2.updated_at)).not.toBeNaN()
+        expect(data2.updated_at > data2.created_at).toBe(true)
+      }
+
+      const userInDatabase = await findOneByUsername('user1')
+
+      const passwordMatch = await passwordCompare('newpassword123', userInDatabase?.password || '')
+      expect(passwordMatch).toBe(true)
+
+      const incorrectPasswordMatch = await passwordCompare('password123', userInDatabase?.password || '')
+      expect(incorrectPasswordMatch).toBe(false)
     })
   })
 })

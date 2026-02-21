@@ -12,9 +12,9 @@ export type User = {
   updated_at: string
 }
 
-export async function create(userInputValues: Partial<User>): Promise<User> {
-  await validateUniqueEmail(userInputValues.email)
+export async function createUser(userInputValues: Partial<User>): Promise<User> {
   await validateUniqueUsername(userInputValues.username)
+  await validateUniqueEmail(userInputValues.email)
   await hashPasswordInObject(userInputValues)
 
   const results = await query<User>({
@@ -53,6 +53,51 @@ export async function findOneByUsername(username?: string): Promise<User | null>
       action: 'Check the username and try again.',
     })
   }
+
+  return results.rows[0]
+}
+
+export async function updateUser(username: string | undefined, userInputValues: Partial<User>): Promise<User> {
+  const currentUser = await findOneByUsername(username)
+
+  if ('username' in userInputValues) {
+    await validateUniqueUsername(userInputValues.username)
+  }
+
+  if ('email' in userInputValues) {
+    await validateUniqueEmail(userInputValues.email)
+  }
+
+  if ('password' in userInputValues) {
+    await hashPasswordInObject(userInputValues)
+  }
+
+  const userWithNewValues: Partial<User> = {
+    ...currentUser,
+    ...userInputValues,
+  }
+
+  return await runUpdateQuery(userWithNewValues)
+}
+
+async function runUpdateQuery(userWithNewValues: Partial<User>): Promise<User> {
+  const results = await query<User>({
+    text: `
+      UPDATE
+        users
+      SET
+        username = $2,
+        email = $3,
+        password = $4,
+        updated_at = timezone('utc', now())
+      WHERE
+        id = $1
+      RETURNING
+        *
+      ;
+    `,
+    values: [userWithNewValues.id, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password],
+  })
 
   return results.rows[0]
 }
