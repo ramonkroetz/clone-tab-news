@@ -15,7 +15,7 @@ export type User = {
 export async function createUser(userInputValues: Partial<User>): Promise<User> {
   await validateUniqueUsername(userInputValues.username)
   await validateUniqueEmail(userInputValues.email)
-  await hashPasswordInObject(userInputValues)
+  userInputValues.password = await hashPasswordInObject(userInputValues.password)
 
   const results = await query<User>({
     text: `
@@ -69,7 +69,7 @@ export async function updateUser(username: string | undefined, userInputValues: 
   }
 
   if ('password' in userInputValues) {
-    await hashPasswordInObject(userInputValues)
+    userInputValues.password = await hashPasswordInObject(userInputValues.password)
   }
 
   const userWithNewValues: Partial<User> = {
@@ -144,7 +144,13 @@ async function validateUniqueUsername(username?: string) {
   }
 }
 
-async function hashPasswordInObject(userInputValues: Partial<User>) {
-  const hash = await hashPassword(userInputValues.password ?? '')
-  userInputValues.password = hash
+async function hashPasswordInObject(password?: string): Promise<string> {
+  if (!password) {
+    throw new ValidationError({
+      message: 'Password is required.',
+      action: 'Provide a valid password.',
+    })
+  }
+
+  return await hashPassword(password)
 }
