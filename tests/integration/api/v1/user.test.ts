@@ -1,5 +1,6 @@
 import { api } from 'infra/api'
-import { User } from 'models/user'
+import { passwordCompare } from 'models/password'
+import { findOneByUsername, User } from 'models/user'
 import { clearDatabase, runPendingMigrations, waitForAllServices } from 'tests/orchestrator'
 import { version as uuidVersion } from 'uuid'
 import { beforeEach, describe, expect, test } from 'vitest'
@@ -30,7 +31,7 @@ describe('POST /api/v1/user', () => {
           id: data.id,
           username: 'ramonkroetz',
           email: 'asd@asd.com',
-          password: 'password123',
+          password: data.password,
           created_at: data.created_at,
           updated_at: data.updated_at,
         })
@@ -38,6 +39,12 @@ describe('POST /api/v1/user', () => {
         expect(Date.parse(data.created_at)).not.toBeNaN()
         expect(Date.parse(data.updated_at)).not.toBeNaN()
       }
+
+      const userInDatabase = await findOneByUsername('ramonkroetz')
+      const passwordMatch = await passwordCompare('password123', userInDatabase?.password || '')
+      const incorrectPasswordMatch = await passwordCompare('wrongpassword', userInDatabase?.password || '')
+      expect(passwordMatch).toBe(true)
+      expect(incorrectPasswordMatch).toBe(false)
     })
 
     test('With duplicate email', async () => {
@@ -140,7 +147,7 @@ describe('GET /api/v1/users/[username]', () => {
           id: data.id,
           username: 'ramonkroetz',
           email: 'asd@asd.com',
-          password: 'password123',
+          password: data.password,
           created_at: data.created_at,
           updated_at: data.updated_at,
         })
@@ -172,7 +179,7 @@ describe('GET /api/v1/users/[username]', () => {
           id: data.id,
           username: 'ramonkroetz',
           email: 'asd@asd.com',
-          password: 'password123',
+          password: data.password,
           created_at: data.created_at,
           updated_at: data.updated_at,
         })

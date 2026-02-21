@@ -21,6 +21,7 @@ export default defineConfig({
       infra: path.resolve(__dirname, './infra'),
       pages: path.resolve(__dirname, './pages'),
       tests: path.resolve(__dirname, './tests'),
+      models: path.resolve(__dirname, './models'),
     },
   },
 })

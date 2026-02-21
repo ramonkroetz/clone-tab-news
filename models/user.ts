@@ -1,6 +1,8 @@
 import { query } from 'infra/database'
 import { NotFoundError, ValidationError } from 'infra/errors'
 
+import { hashPassword } from './password'
+
 export type User = {
   id: string
   username: string
@@ -13,6 +15,7 @@ export type User = {
 export async function create(userInputValues: Partial<User>): Promise<User> {
   await validateUniqueEmail(userInputValues.email)
   await validateUniqueUsername(userInputValues.username)
+  await hashPasswordInObject(userInputValues)
 
   const results = await query<User>({
     text: `
@@ -94,4 +97,9 @@ async function validateUniqueUsername(username?: string) {
       action: 'Use another username.',
     })
   }
+}
+
+async function hashPasswordInObject(userInputValues: Partial<User>) {
+  const hash = await hashPassword(userInputValues.password ?? '')
+  userInputValues.password = hash
 }
