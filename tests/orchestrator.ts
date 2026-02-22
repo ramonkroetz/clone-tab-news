@@ -36,10 +36,10 @@ export async function runPendingMigrations() {
   await runPendingMigrationsModel()
 }
 
-export async function createUserTest(user: Partial<User>) {
+export async function createUserTest(user?: Partial<User>) {
   return await createUser({
-    password: user.password || 'validpassword',
-    username: user.username || faker.internet.username().replace(/[_.-]/g, ''),
-    email: user.email || faker.internet.email(),
+    password: user?.password || 'validpassword',
+    username: user?.username || faker.internet.username().replace(/[_.-]/g, ''),
+    email: user?.email || faker.internet.email(),
   })
 }
