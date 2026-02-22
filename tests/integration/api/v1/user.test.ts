@@ -1,6 +1,6 @@
 import { api } from 'infra/api'
-import { passwordCompare } from 'models/password'
-import { findOneByUsername, User } from 'models/user'
+import { comparePassword } from 'models/password'
+import { findOneUserByUsername, User } from 'models/user'
 import { clearDatabase, createUserTest, runPendingMigrations, waitForAllServices } from 'tests/orchestrator'
 import { version as uuidVersion } from 'uuid'
 import { beforeEach, describe, expect, test } from 'vitest'
@@ -40,12 +40,12 @@ describe('POST /api/v1/user', () => {
         expect(Date.parse(data.updated_at)).not.toBeNaN()
       }
 
-      const userInDatabase = await findOneByUsername('ramonkroetz')
+      const userInDatabase = await findOneUserByUsername('ramonkroetz')
 
-      const passwordMatch = await passwordCompare('password123', userInDatabase?.password || '')
+      const passwordMatch = await comparePassword('password123', userInDatabase?.password || '')
       expect(passwordMatch).toBe(true)
 
-      const incorrectPasswordMatch = await passwordCompare('wrongpassword', userInDatabase?.password || '')
+      const incorrectPasswordMatch = await comparePassword('wrongpassword', userInDatabase?.password || '')
       expect(incorrectPasswordMatch).toBe(false)
     })
 
@@ -351,12 +351,12 @@ describe('PATCH /api/v1/users/[username]', () => {
         expect(data.updated_at > data.created_at).toBe(true)
       }
 
-      const userInDatabase = await findOneByUsername(username)
+      const userInDatabase = await findOneUserByUsername(username)
 
-      const passwordMatch = await passwordCompare('newpassword123', userInDatabase?.password || '')
+      const passwordMatch = await comparePassword('newpassword123', userInDatabase?.password || '')
       expect(passwordMatch).toBe(true)
 
-      const incorrectPasswordMatch = await passwordCompare('password123', userInDatabase?.password || '')
+      const incorrectPasswordMatch = await comparePassword('password123', userInDatabase?.password || '')
       expect(incorrectPasswordMatch).toBe(false)
     })
   })

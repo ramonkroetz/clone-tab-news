@@ -6,7 +6,7 @@ import { createRouter } from 'next-connect'
 const router = createRouter<NextApiRequest, NextApiResponse>()
 
 router.post(async (request: NextApiRequest, response: NextApiResponse) => {
-  const userInputValues = request.body
+  const userInputValues = request.body as { email: string; password: string; username: string }
   const newUser = await createUser(userInputValues)
   return response.status(201).json(newUser)
 })

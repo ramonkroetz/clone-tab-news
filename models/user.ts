@@ -12,7 +12,11 @@ export type User = {
   updated_at: string
 }
 
-export async function createUser(userInputValues: Partial<User>): Promise<User> {
+export async function createUser(userInputValues: {
+  email: string
+  password: string
+  username: string
+}): Promise<User> {
   await validateUniqueUsername(userInputValues.username)
   await validateUniqueEmail(userInputValues.email)
   userInputValues.password = await hashPasswordInObject(userInputValues.password)
@@ -32,7 +36,7 @@ export async function createUser(userInputValues: Partial<User>): Promise<User> 
   return results.rows[0]
 }
 
-export async function findOneByUsername(username?: string): Promise<User | null> {
+export async function findOneUserByUsername(username?: string): Promise<User> {
   const results = await query<User>({
     text: `
       SELECT
@@ -58,7 +62,7 @@ export async function findOneByUsername(username?: string): Promise<User | null>
 }
 
 export async function updateUser(username: string | undefined, userInputValues: Partial<User>): Promise<User> {
-  const currentUser = await findOneByUsername(username)
+  const currentUser = await findOneUserByUsername(username)
 
   if ('username' in userInputValues) {
     await validateUniqueUsername(userInputValues.username)
@@ -78,6 +82,31 @@ export async function updateUser(username: string | undefined, userInputValues: 
   }
 
   return await runUpdateQuery(userWithNewValues)
+}
+
+export async function findOneUserByEmail(email?: string): Promise<User> {
+  const results = await query<User>({
+    text: `
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        LOWER(email) = LOWER($1)
+      LIMIT
+        1
+      ;`,
+    values: [email],
+  })
+
+  if (results.rowCount === 0) {
+    throw new NotFoundError({
+      message: 'User not found.',
+      action: 'Check the email and try again.',
+    })
+  }
+
+  return results.rows[0]
 }
 
 async function runUpdateQuery(userWithNewValues: Partial<User>): Promise<User> {

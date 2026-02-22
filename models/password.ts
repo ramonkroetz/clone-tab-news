@@ -5,7 +5,11 @@ export async function hashPassword(password: string): Promise<string> {
   return await bcrypt.hash(password, rounds)
 }
 
-export async function passwordCompare(providedPassword: string, storedPassword: string): Promise<boolean> {
+export async function comparePassword(providedPassword?: string, storedPassword?: string): Promise<boolean> {
+  if (!providedPassword || !storedPassword) {
+    return false
+  }
+
   return await bcrypt.compare(providedPassword, storedPassword)
 }
 

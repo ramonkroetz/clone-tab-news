@@ -117,3 +117,24 @@ export class NotFoundError extends Error {
     }
   }
 }
+
+export class UnauthorizedError extends Error {
+  action: string
+  statusCode: number
+
+  constructor({ cause, message, action }: { cause?: unknown; message: string; action: string }) {
+    super(message || 'Unauthorized.', { cause })
+    this.name = 'UnauthorizedError'
+    this.action = action || 'Check your credentials and try again.'
+    this.statusCode = 401
+  }
+
+  toJSON(): ErrorInfo {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    }
+  }
+}
