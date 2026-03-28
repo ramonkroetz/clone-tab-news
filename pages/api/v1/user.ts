@@ -14,6 +14,7 @@ router.get(async (request: NextApiRequest, response: NextApiResponse) => {
   setSessionCookie(response, renewedSession.token)
   const userFound = await findOneUserById(session.user_id)
 
+  response.setHeader('Cache-Control', 'no-store, no-cache, max-age=0, must-revalidate')
   response.status(200).json(userFound)
 })
 

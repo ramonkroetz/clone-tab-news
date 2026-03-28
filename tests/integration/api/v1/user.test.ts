@@ -73,6 +73,9 @@ describe('GET /api/v1/user', () => {
             path: '/',
             httpOnly: true,
           })
+
+          const cacheControlHeader = response?.headers.get('Cache-Control')
+          expect(cacheControlHeader).toBe('no-store, no-cache, max-age=0, must-revalidate')
         }
       }
     })
