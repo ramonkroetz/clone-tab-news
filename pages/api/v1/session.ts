@@ -2,7 +2,7 @@ import * as cookie from 'cookie'
 import { errorHandlers } from 'infra/controller'
 import { getAuthenticateUser } from 'models/authentication'
 import { createSession, EXPIRATION_IN_MILLISECONDS } from 'models/session'
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { createRouter } from 'next-connect'
 
 const router = createRouter<NextApiRequest, NextApiResponse>()

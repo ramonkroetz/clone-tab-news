@@ -18,7 +18,7 @@
         "noAccumulatingSpread": "off"
       },
       "style": {
-        "useImportType": "off"
+        "useImportType": "error"
       },
       "suspicious": {
         "noConsole": "off"

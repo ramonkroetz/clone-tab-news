@@ -1,6 +1,6 @@
 import { errorHandlers } from 'infra/controller'
 import { createUser } from 'models/user'
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { createRouter } from 'next-connect'
 
 const router = createRouter<NextApiRequest, NextApiResponse>()

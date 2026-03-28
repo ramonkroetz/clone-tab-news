@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { getNewClient } from 'infra/database'
 import { ServiceError } from 'infra/errors'
 import { type RunnerOption, runner } from 'node-pg-migrate'
-import { Client } from 'pg'
+import type { Client } from 'pg'
 
 const options: RunnerOption = {
   databaseUrl: process.env.DATABASE_URL || '',

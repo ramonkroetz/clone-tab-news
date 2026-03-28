@@ -1,6 +1,6 @@
 import { useApi } from 'hooks/useApi'
 
-import { StatusResponse } from './api/v1/status'
+import type { StatusResponse } from './api/v1/status'
 
 function UpdateAt() {
   const { data, isLoading, error } = useApi<StatusResponse>('/api/v1/status', {

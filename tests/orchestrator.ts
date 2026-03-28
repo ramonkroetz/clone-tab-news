@@ -3,8 +3,8 @@ import retry from 'async-retry'
 import { api } from 'infra/api'
 import { query } from 'infra/database'
 import { runPendingMigrations as runPendingMigrationsModel } from 'models/migrator'
-import { createUser, User } from 'models/user'
-import { StatusResponse } from 'pages/api/v1/status'
+import { createUser, type User } from 'models/user'
+import type { StatusResponse } from 'pages/api/v1/status'
 
 export async function waitForAllServices() {
   async function waitForWebServer() {

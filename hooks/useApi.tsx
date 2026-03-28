@@ -1,5 +1,5 @@
 import { api } from 'infra/api'
-import useSWR, { SWRConfiguration } from 'swr'
+import useSWR, { type SWRConfiguration } from 'swr'
 
 type UseAPIConfig = {
   configFetch?: RequestInit

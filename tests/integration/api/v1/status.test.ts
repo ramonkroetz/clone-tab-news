@@ -1,5 +1,5 @@
 import { api } from 'infra/api'
-import { StatusResponse } from 'pages/api/v1/status'
+import type { StatusResponse } from 'pages/api/v1/status'
 import { waitForAllServices } from 'tests/orchestrator'
 import { beforeEach, describe, expect, test } from 'vitest'
 
