@@ -1,9 +1,15 @@
 import { api } from 'infra/api'
-import { EXPIRATION_IN_MILLISECONDS } from 'models/session'
+import { EXPIRATION_IN_MILLISECONDS, type Session } from 'models/session'
 import setCookieParser from 'set-cookie-parser'
 import { clearDatabase, createUserTest, runPendingMigrations, waitForAllServices } from 'tests/orchestrator'
 import { version as uuidVersion } from 'uuid'
 import { beforeEach, describe, expect, test } from 'vitest'
+
+type SessionClient = Omit<Session, 'created_at' | 'updated_at' | 'expires_at'> & {
+  created_at: string
+  updated_at: string
+  expires_at: string
+}
 
 beforeEach(async () => {
   await waitForAllServices()
@@ -95,7 +101,7 @@ describe('POST /api/v1/session', () => {
         password: 'correct_password',
       })
 
-      const response = await fetch('http://localhost:3000/api/v1/session', {
+      const { data, status, response } = await api<SessionClient>('http://localhost:3000/api/v1/session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,8 +112,7 @@ describe('POST /api/v1/session', () => {
         }),
       })
 
-      expect(response.status).toEqual(201)
-      const data = await response.json()
+      expect(status).toEqual(201)
       expect(data).not.toBe(null)
       if (data) {
         expect(data).toEqual({
@@ -130,14 +135,14 @@ describe('POST /api/v1/session', () => {
 
         expect(expiresAt.getTime() - createdAt.getTime()).toBe(EXPIRATION_IN_MILLISECONDS)
 
-        const setCookieHeader = response.headers.get('set-cookie')
+        const setCookieHeader = response?.headers.get('set-cookie')
         const parsedSetCookie = setCookieParser(setCookieHeader ? [setCookieHeader] : [], {
           map: true,
         })
 
         expect(parsedSetCookie.session_id).toEqual({
           name: 'session_id',
-          value: data?.token,
+          value: data.token,
           maxAge: EXPIRATION_IN_MILLISECONDS / 1000,
           path: '/',
           httpOnly: true,

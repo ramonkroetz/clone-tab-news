@@ -1,11 +1,20 @@
-import { errorHandlers } from 'infra/controller'
+import { errorHandlers, setSessionCookie } from 'infra/controller'
+import { findValidSessionByToken, renewSession } from 'models/session'
+import { findOneUserById } from 'models/user'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createRouter } from 'next-connect'
 
 const router = createRouter<NextApiRequest, NextApiResponse>()
 
-router.get(async (_: NextApiRequest, response: NextApiResponse) => {
-  response.status(200).json({ name: 'John Doe' })
+router.get(async (request: NextApiRequest, response: NextApiResponse) => {
+  const sessionId = request.cookies.session_id
+
+  const session = await findValidSessionByToken(sessionId)
+  const renewedSession = await renewSession(session.id)
+  setSessionCookie(response, renewedSession.token)
+  const userFound = await findOneUserById(session.user_id)
+
+  response.status(200).json(userFound)
 })
 
 export default router.handler(errorHandlers)

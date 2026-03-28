@@ -8,8 +8,8 @@ export type User = {
   username: string
   email: string
   password: string
-  created_at: string
-  updated_at: string
+  created_at: Date
+  updated_at: Date
 }
 
 export async function createUser(userInputValues: {
@@ -32,6 +32,31 @@ export async function createUser(userInputValues: {
       ;`,
     values: [userInputValues.username, userInputValues.email, userInputValues.password],
   })
+
+  return results.rows[0]
+}
+
+export async function findOneUserById(id?: string): Promise<User> {
+  const results = await query<User>({
+    text: `
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        id = $1
+      LIMIT
+        1
+      ;`,
+    values: [id],
+  })
+
+  if (results.rowCount === 0) {
+    throw new NotFoundError({
+      message: 'User not found.',
+      action: 'Check the user ID and try again.',
+    })
+  }
 
   return results.rows[0]
 }

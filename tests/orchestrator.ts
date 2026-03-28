@@ -3,7 +3,8 @@ import retry from 'async-retry'
 import { api } from 'infra/api'
 import { query } from 'infra/database'
 import { runPendingMigrations as runPendingMigrationsModel } from 'models/migrator'
-import { createUser, type User } from 'models/user'
+import { createSession } from 'models/session'
+import { createUser } from 'models/user'
 import type { StatusResponse } from 'pages/api/v1/status'
 
 export async function waitForAllServices() {
@@ -36,10 +37,22 @@ export async function runPendingMigrations() {
   await runPendingMigrationsModel()
 }
 
-export async function createUserTest(user?: Partial<User>) {
+export async function createUserTest({
+  password,
+  username,
+  email,
+}: {
+  password?: string
+  username?: string
+  email?: string
+} = {}) {
   return await createUser({
-    password: user?.password || 'validpassword',
-    username: user?.username || faker.internet.username().replace(/[_.-]/g, ''),
-    email: user?.email || faker.internet.email(),
+    password: password || 'validpassword',
+    username: username || faker.internet.username().replace(/[_.-]/g, ''),
+    email: email || faker.internet.email(),
   })
+}
+
+export async function createSessionTest(userId: string) {
+  return await createSession(userId)
 }

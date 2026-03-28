@@ -5,6 +5,11 @@ import { clearDatabase, createUserTest, runPendingMigrations, waitForAllServices
 import { version as uuidVersion } from 'uuid'
 import { beforeEach, describe, expect, test } from 'vitest'
 
+type UserClient = Omit<User, 'created_at' | 'updated_at'> & {
+  created_at: string
+  updated_at: string
+}
+
 beforeEach(async () => {
   await waitForAllServices()
   await clearDatabase()
@@ -14,7 +19,7 @@ beforeEach(async () => {
 describe('POST /api/v1/user', () => {
   describe('Anonymous user', () => {
     test('With unique and valid data', async () => {
-      const { status, data } = await api<User>('http://localhost:3000/api/v1/users', {
+      const { status, data } = await api<UserClient>('http://localhost:3000/api/v1/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -50,7 +55,7 @@ describe('POST /api/v1/user', () => {
     })
 
     test('With duplicate email', async () => {
-      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
+      const { status } = await api<UserClient>('http://localhost:3000/api/v1/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,7 +92,7 @@ describe('POST /api/v1/user', () => {
     })
 
     test('With duplicate username', async () => {
-      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
+      const { status } = await api<UserClient>('http://localhost:3000/api/v1/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -134,7 +139,7 @@ describe('GET /api/v1/users/[username]', () => {
         password: 'password123',
       })
 
-      const { status, data } = await api<User>('http://localhost:3000/api/v1/users/ramonkroetz')
+      const { status, data } = await api<UserClient>('http://localhost:3000/api/v1/users/ramonkroetz')
 
       expect(status).toEqual(200)
       expect(data).not.toBeNull()
@@ -160,7 +165,7 @@ describe('GET /api/v1/users/[username]', () => {
         password: 'password123',
       })
 
-      const { status: statusGet, data } = await api<User>('http://localhost:3000/api/v1/users/RAMONKroetz')
+      const { status: statusGet, data } = await api<UserClient>('http://localhost:3000/api/v1/users/RAMONKroetz')
 
       expect(statusGet).toEqual(200)
       expect(data).not.toBeNull()
@@ -197,7 +202,7 @@ describe('GET /api/v1/users/[username]', () => {
 describe('PATCH /api/v1/users/[username]', () => {
   describe('Anonymous user', () => {
     test('With nonexistent username', async () => {
-      const { status, data, error } = await api<User>('http://localhost:3000/api/v1/users/nonexistentuser', {
+      const { status, data, error } = await api<UserClient>('http://localhost:3000/api/v1/users/nonexistentuser', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -264,7 +269,7 @@ describe('PATCH /api/v1/users/[username]', () => {
         username: 'user1',
       })
 
-      const { status, data } = await api<User>(`http://localhost:3000/api/v1/users/${username}`, {
+      const { status, data } = await api<UserClient>(`http://localhost:3000/api/v1/users/${username}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -295,7 +300,7 @@ describe('PATCH /api/v1/users/[username]', () => {
         email: 'user1@asd.com',
       })
 
-      const { status, data } = await api<User>(`http://localhost:3000/api/v1/users/${username}`, {
+      const { status, data } = await api<UserClient>(`http://localhost:3000/api/v1/users/${username}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -326,7 +331,7 @@ describe('PATCH /api/v1/users/[username]', () => {
         password: 'password123',
       })
 
-      const { status, data } = await api<User>(`http://localhost:3000/api/v1/users/${username}`, {
+      const { status, data } = await api<UserClient>(`http://localhost:3000/api/v1/users/${username}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

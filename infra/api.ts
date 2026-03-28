@@ -4,6 +4,7 @@ type ApiResponse<T> = {
   status?: number
   data: T | null
   error: unknown
+  response: Response | null
 }
 
 export async function api<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
@@ -22,12 +23,14 @@ export async function api<T>(url: string, init?: RequestInit): Promise<ApiRespon
       status: response.status,
       data,
       error: null,
+      response,
     }
   } catch (error) {
     return {
       status: response?.status,
       data: null,
       error,
+      response,
     }
   }
 }
