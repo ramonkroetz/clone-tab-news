@@ -1,8 +1,7 @@
-import * as cookie from 'cookie'
-import { errorHandlers } from 'infra/controller'
+import { errorHandlers, setSessionCookie } from 'infra/controller'
 import { getAuthenticateUser } from 'models/authentication'
-import { createSession, EXPIRATION_IN_MILLISECONDS } from 'models/session'
-import { NextApiRequest, NextApiResponse } from 'next'
+import { createSession } from 'models/session'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { createRouter } from 'next-connect'
 
 const router = createRouter<NextApiRequest, NextApiResponse>()
@@ -14,16 +13,8 @@ router.post(async (request: NextApiRequest, response: NextApiResponse) => {
   }
 
   const authenticateUser = await getAuthenticateUser(userInputValues.email, userInputValues.password)
-
   const newSession = await createSession(authenticateUser.id)
-
-  const setCookie = cookie.serialize('session_id', newSession.token, {
-    path: '/',
-    maxAge: EXPIRATION_IN_MILLISECONDS / 1000,
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-  })
-  response.setHeader('Set-Cookie', setCookie)
+  setSessionCookie(response, newSession.token)
 
   return response.status(201).json(newSession)
 })

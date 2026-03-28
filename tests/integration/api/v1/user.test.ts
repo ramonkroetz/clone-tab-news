@@ -1,9 +1,21 @@
 import { api } from 'infra/api'
-import { comparePassword } from 'models/password'
-import { findOneUserByUsername, User } from 'models/user'
-import { clearDatabase, createUserTest, runPendingMigrations, waitForAllServices } from 'tests/orchestrator'
+import { EXPIRATION_IN_MILLISECONDS, findValidSessionByToken } from 'models/session'
+import type { User } from 'models/user'
+import setCookieParser from 'set-cookie-parser'
+import {
+  clearDatabase,
+  createSessionTest,
+  createUserTest,
+  runPendingMigrations,
+  waitForAllServices,
+} from 'tests/orchestrator'
 import { version as uuidVersion } from 'uuid'
-import { beforeEach, describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test, vitest } from 'vitest'
+
+type UserClient = Omit<User, 'created_at' | 'updated_at'> & {
+  created_at: string
+  updated_at: string
+}
 
 beforeEach(async () => {
   await waitForAllServices()
@@ -11,353 +23,105 @@ beforeEach(async () => {
   await runPendingMigrations()
 })
 
-describe('POST /api/v1/user', () => {
-  describe('Anonymous user', () => {
-    test('With unique and valid data', async () => {
-      const { status, data } = await api<User>('http://localhost:3000/api/v1/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'ramonkroetz',
-          email: 'asd@asd.com',
-          password: 'password123',
-        }),
+describe('GET /api/v1/user', () => {
+  describe('Default user', () => {
+    test('With valid session', async () => {
+      const createUser = await createUserTest({
+        username: 'UserWithValidSession',
       })
 
-      expect(status).toEqual(201)
-      expect(data).not.toBeNull()
+      const session = await createSessionTest(createUser.id)
+
+      const { data, status, response } = await api<UserClient>('http://localhost:3000/api/v1/user', {
+        headers: {
+          Cookie: `session_id=${session.token}`,
+        },
+      })
+
+      expect(status).toBe(200)
+      expect(data).not.toBe(null)
       if (data) {
         expect(data).toEqual({
-          id: data.id,
-          username: 'ramonkroetz',
-          email: 'asd@asd.com',
-          password: data.password,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
+          id: createUser.id,
+          username: 'UserWithValidSession',
+          email: createUser.email,
+          password: createUser.password,
+          created_at: createUser.created_at.toISOString(),
+          updated_at: createUser.updated_at.toISOString(),
         })
-        expect(uuidVersion(data.id)).toBe(4)
-        expect(Date.parse(data.created_at)).not.toBeNaN()
-        expect(Date.parse(data.updated_at)).not.toBeNaN()
-      }
 
-      const userInDatabase = await findOneUserByUsername('ramonkroetz')
+        expect(uuidVersion(createUser.id)).toBe(4)
+        expect(Date.parse(data.created_at)).not.toBeNull()
+        expect(Date.parse(data.updated_at)).not.toBeNull()
 
-      const passwordMatch = await comparePassword('password123', userInDatabase?.password || '')
-      expect(passwordMatch).toBe(true)
+        const renewedSession = await findValidSessionByToken(session.token)
 
-      const incorrectPasswordMatch = await comparePassword('wrongpassword', userInDatabase?.password || '')
-      expect(incorrectPasswordMatch).toBe(false)
-    })
+        expect(renewedSession).not.toBeNull()
+        if (renewedSession) {
+          expect(renewedSession.expires_at > session.expires_at).toEqual(true)
+          expect(renewedSession.updated_at > session.updated_at).toEqual(true)
 
-    test('With duplicate email', async () => {
-      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'duplicateuseremail',
-          email: 'duplicate@asd.com',
-          password: 'password123',
-        }),
-      })
+          const setCookieHeader = response?.headers.get('set-cookie')
+          const parsedSetCookie = setCookieParser(setCookieHeader ? [setCookieHeader] : [], {
+            map: true,
+          })
 
-      expect(status).toEqual(201)
+          expect(parsedSetCookie.session_id).toEqual({
+            name: 'session_id',
+            value: renewedSession.token,
+            maxAge: EXPIRATION_IN_MILLISECONDS / 1000,
+            path: '/',
+            httpOnly: true,
+          })
 
-      const {
-        status: status2,
-        data: data2,
-        error: error2,
-      } = await api<User>('http://localhost:3000/api/v1/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'duplicateuseremail2',
-          email: 'Duplicate@asd.com',
-          password: 'password123',
-        }),
-      })
-
-      expect(status2).toEqual(400)
-      expect(data2).toBeNull()
-      expect(error2).toEqual({
-        name: 'ValidationError',
-        message: 'Email already exists.',
-        action: 'Use another email.',
-        status_code: 400,
-      })
-    })
-
-    test('With duplicate username', async () => {
-      const { status } = await api<User>('http://localhost:3000/api/v1/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'duplicateusername',
-          email: 'duplicateusername@asd.com',
-          password: 'password123',
-        }),
-      })
-
-      expect(status).toEqual(201)
-
-      const {
-        status: status2,
-        data: data2,
-        error: error2,
-      } = await api<User>('http://localhost:3000/api/v1/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'DuplicateUsername',
-          email: 'duplicateusername2@asd.com',
-          password: 'password123',
-        }),
-      })
-
-      expect(status2).toEqual(400)
-      expect(data2).toBeNull()
-      expect(error2).toEqual({
-        name: 'ValidationError',
-        message: 'Username already exists.',
-        action: 'Use another username.',
-        status_code: 400,
-      })
-    })
-  })
-})
-
-describe('GET /api/v1/users/[username]', () => {
-  describe('Anonymous user', () => {
-    test('With exact case match', async () => {
-      await createUserTest({
-        username: 'ramonkroetz',
-        email: 'asd@asd.com',
-        password: 'password123',
-      })
-
-      const { status, data } = await api<User>('http://localhost:3000/api/v1/users/ramonkroetz')
-
-      expect(status).toEqual(200)
-      expect(data).not.toBeNull()
-      if (data) {
-        expect(data).toEqual({
-          id: data.id,
-          username: 'ramonkroetz',
-          email: 'asd@asd.com',
-          password: data.password,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-        })
-        expect(uuidVersion(data.id)).toBe(4)
-        expect(Date.parse(data.created_at)).not.toBeNaN()
-        expect(Date.parse(data.updated_at)).not.toBeNaN()
+          const cacheControlHeader = response?.headers.get('Cache-Control')
+          expect(cacheControlHeader).toBe('no-store, no-cache, max-age=0, must-revalidate')
+        }
       }
     })
 
-    test('With case mismatch', async () => {
-      await createUserTest({
-        username: 'ramonkroetz',
-        email: 'asd@asd.com',
-        password: 'password123',
+    test('With nonexistent session', async () => {
+      const nonExistentToken =
+        'fca60a1e6cd39f46d5719c91a2ece97406bae8d0bea2f5a5aa108671533a0733ada8b2a1fb2f965afc653747752ba0d1'
+
+      const { status, error } = await api('http://localhost:3000/api/v1/user', {
+        headers: {
+          Cookie: `session_id=${nonExistentToken}`,
+        },
       })
 
-      const { status: statusGet, data } = await api<User>('http://localhost:3000/api/v1/users/RAMONKroetz')
-
-      expect(statusGet).toEqual(200)
-      expect(data).not.toBeNull()
-      if (data) {
-        expect(data).toEqual({
-          id: data.id,
-          username: 'ramonkroetz',
-          email: 'asd@asd.com',
-          password: data.password,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-        })
-        expect(uuidVersion(data.id)).toBe(4)
-        expect(Date.parse(data.created_at)).not.toBeNaN()
-        expect(Date.parse(data.updated_at)).not.toBeNaN()
-      }
-    })
-
-    test('With nonexistent username', async () => {
-      const { status, data, error } = await api<User>('http://localhost:3000/api/v1/users/userdoesnotexist')
-
-      expect(status).toEqual(404)
-      expect(data).toBeNull()
+      expect(status).toBe(401)
       expect(error).toEqual({
-        name: 'NotFoundError',
-        message: 'User not found.',
-        action: 'Check the username and try again.',
-        status_code: 404,
+        name: 'UnauthorizedError',
+        message: 'Session not found.',
+        action: 'Check if user is logged in and try again.',
+        status_code: 401,
       })
     })
-  })
-})
 
-describe('PATCH /api/v1/users/[username]', () => {
-  describe('Anonymous user', () => {
-    test('With nonexistent username', async () => {
-      const { status, data, error } = await api<User>('http://localhost:3000/api/v1/users/nonexistentuser', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'newemail@asd.com',
-        }),
+    test('With expired session', async () => {
+      vitest.useFakeTimers({
+        now: new Date(Date.now() - EXPIRATION_IN_MILLISECONDS),
       })
 
-      expect(status).toEqual(404)
-      expect(data).toBeNull()
+      const createUser = await createUserTest()
+      const session = await createSessionTest(createUser.id)
+
+      vitest.useRealTimers()
+
+      const { status, error } = await api<UserClient>('http://localhost:3000/api/v1/user', {
+        headers: {
+          Cookie: `session_id=${session.token}`,
+        },
+      })
+
+      expect(status).toBe(401)
       expect(error).toEqual({
-        name: 'NotFoundError',
-        message: 'User not found.',
-        action: 'Check the username and try again.',
-        status_code: 404,
+        name: 'UnauthorizedError',
+        message: 'Session not found.',
+        action: 'Check if user is logged in and try again.',
+        status_code: 401,
       })
-    })
-
-    test('With duplicate username', async () => {
-      await createUserTest({ username: 'user1' })
-      await createUserTest({ username: 'user2' })
-
-      const { status, data, error } = await api<User>('http://localhost:3000/api/v1/users/user2', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'user1',
-        }),
-      })
-
-      expect(status).toEqual(400)
-      expect(data).toBeNull()
-      expect(error).toEqual({
-        name: 'ValidationError',
-        message: 'Username already exists.',
-        action: 'Use another username.',
-        status_code: 400,
-      })
-    })
-
-    test('With duplicate email', async () => {
-      await createUserTest({ email: 'user1@asd.com' })
-      const { username } = await createUserTest({ email: 'user2@asd.com' })
-
-      const { status, data, error } = await api<User>(`http://localhost:3000/api/v1/users/${username}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'user1@asd.com',
-        }),
-      })
-
-      expect(status).toEqual(400)
-      expect(data).toBeNull()
-      expect(error).toEqual({
-        name: 'ValidationError',
-        message: 'Email already exists.',
-        action: 'Use another email.',
-        status_code: 400,
-      })
-    })
-
-    test('With unique username', async () => {
-      const { username, email } = await createUserTest({
-        username: 'user1',
-      })
-
-      const { status, data } = await api<User>(`http://localhost:3000/api/v1/users/${username}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'user2',
-        }),
-      })
-
-      expect(status).toEqual(200)
-      expect(data).not.toBeNull()
-      if (data) {
-        expect(data).toEqual({
-          id: data.id,
-          username: 'user2',
-          email,
-          password: data.password,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-        })
-        expect(uuidVersion(data.id)).toBe(4)
-        expect(Date.parse(data.created_at)).not.toBeNaN()
-        expect(Date.parse(data.updated_at)).not.toBeNaN()
-        expect(data.updated_at > data.created_at).toBe(true)
-      }
-    })
-
-    test('With unique email', async () => {
-      const { username } = await createUserTest({
-        email: 'user1@asd.com',
-      })
-
-      const { status, data } = await api<User>(`http://localhost:3000/api/v1/users/${username}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'user2@asd.com',
-        }),
-      })
-
-      expect(status).toEqual(200)
-      expect(data).not.toBeNull()
-      if (data) {
-        expect(data).toEqual({
-          id: data.id,
-          username,
-          email: 'user2@asd.com',
-          password: data.password,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-        })
-        expect(uuidVersion(data.id)).toBe(4)
-        expect(Date.parse(data.created_at)).not.toBeNaN()
-        expect(Date.parse(data.updated_at)).not.toBeNaN()
-        expect(data.updated_at > data.created_at).toBe(true)
-      }
-    })
-
-    test('With new password', async () => {
-      const { username, email } = await createUserTest({
-        password: 'password123',
-      })
-
-      const { status, data } = await api<User>(`http://localhost:3000/api/v1/users/${username}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          password: 'newpassword123',
-        }),
-      })
-
-      expect(status).toEqual(200)
-      expect(data).not.toBeNull()
-      if (data) {
-        expect(data).toEqual({
-          id: data.id,
-          username,
-          email,
-          password: data.password,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-        })
-        expect(uuidVersion(data.id)).toBe(4)
-        expect(Date.parse(data.created_at)).not.toBeNaN()
-        expect(Date.parse(data.updated_at)).not.toBeNaN()
-        expect(data.updated_at > data.created_at).toBe(true)
-      }
-
-      const userInDatabase = await findOneUserByUsername(username)
-
-      const passwordMatch = await comparePassword('newpassword123', userInDatabase?.password || '')
-      expect(passwordMatch).toBe(true)
-
-      const incorrectPasswordMatch = await comparePassword('password123', userInDatabase?.password || '')
-      expect(incorrectPasswordMatch).toBe(false)
     })
   })
 })

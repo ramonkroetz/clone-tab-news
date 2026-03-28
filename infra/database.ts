@@ -1,4 +1,4 @@
-import { Client, QueryConfig, QueryResult, QueryResultRow } from 'pg'
+import { Client, type QueryConfig, type QueryResult, type QueryResultRow } from 'pg'
 
 import { ServiceError } from './errors'
 

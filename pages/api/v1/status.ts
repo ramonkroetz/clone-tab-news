@@ -1,6 +1,6 @@
 import { errorHandlers } from 'infra/controller'
 import { query } from 'infra/database'
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { createRouter } from 'next-connect'
 
 export type StatusResponse = {

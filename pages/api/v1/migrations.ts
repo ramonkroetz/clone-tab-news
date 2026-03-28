@@ -1,6 +1,6 @@
 import { errorHandlers } from 'infra/controller'
 import { listPendingMigrations, runPendingMigrations } from 'models/migrator'
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { createRouter } from 'next-connect'
 
 const router = createRouter<NextApiRequest, NextApiResponse>()
