@@ -84,7 +84,7 @@ describe('GET /api/v1/user', () => {
       const nonExistentToken =
         'fca60a1e6cd39f46d5719c91a2ece97406bae8d0bea2f5a5aa108671533a0733ada8b2a1fb2f965afc653747752ba0d1'
 
-      const { status, error } = await api('http://localhost:3000/api/v1/user', {
+      const { status, error, response } = await api('http://localhost:3000/api/v1/user', {
         headers: {
           Cookie: `session_id=${nonExistentToken}`,
         },
@@ -96,6 +96,19 @@ describe('GET /api/v1/user', () => {
         message: 'Session not found.',
         action: 'Check if user is logged in and try again.',
         status_code: 401,
+      })
+
+      const setCookieHeader = response?.headers.get('set-cookie')
+      const parsedSetCookie = setCookieParser(setCookieHeader ? [setCookieHeader] : [], {
+        map: true,
+      })
+
+      expect(parsedSetCookie.session_id).toEqual({
+        name: 'session_id',
+        value: 'invalid',
+        maxAge: -1,
+        path: '/',
+        httpOnly: true,
       })
     })
 
@@ -109,7 +122,7 @@ describe('GET /api/v1/user', () => {
 
       vitest.useRealTimers()
 
-      const { status, error } = await api<UserClient>('http://localhost:3000/api/v1/user', {
+      const { status, error, response } = await api<UserClient>('http://localhost:3000/api/v1/user', {
         headers: {
           Cookie: `session_id=${session.token}`,
         },
@@ -121,6 +134,19 @@ describe('GET /api/v1/user', () => {
         message: 'Session not found.',
         action: 'Check if user is logged in and try again.',
         status_code: 401,
+      })
+
+      const setCookieHeader = response?.headers.get('set-cookie')
+      const parsedSetCookie = setCookieParser(setCookieHeader ? [setCookieHeader] : [], {
+        map: true,
+      })
+
+      expect(parsedSetCookie.session_id).toEqual({
+        name: 'session_id',
+        value: 'invalid',
+        maxAge: -1,
+        path: '/',
+        httpOnly: true,
       })
     })
   })

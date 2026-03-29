@@ -1,6 +1,6 @@
-import { errorHandlers, setSessionCookie } from 'infra/controller'
+import { clearSessionCookie, errorHandlers, setSessionCookie } from 'infra/controller'
 import { getAuthenticateUser } from 'models/authentication'
-import { createSession } from 'models/session'
+import { createSession, expireSessionById, findValidSessionByToken } from 'models/session'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createRouter } from 'next-connect'
 
@@ -17,6 +17,17 @@ router.post(async (request: NextApiRequest, response: NextApiResponse) => {
   setSessionCookie(response, newSession.token)
 
   return response.status(201).json(newSession)
+})
+
+router.delete(async (request: NextApiRequest, response: NextApiResponse) => {
+  const sessionToken = request.cookies.session_id
+
+  const session = await findValidSessionByToken(sessionToken)
+  const expiredSession = await expireSessionById(session.id)
+
+  clearSessionCookie(response)
+
+  return response.status(200).json(expiredSession)
 })
 
 export default router.handler(errorHandlers)

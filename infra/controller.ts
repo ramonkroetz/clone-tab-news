@@ -10,7 +10,12 @@ function onNoMatch(_request: NextApiRequest, response: NextApiResponse) {
 }
 
 function onError(error: unknown, _request: NextApiRequest, response: NextApiResponse) {
-  if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof UnauthorizedError) {
+  if (error instanceof ValidationError || error instanceof NotFoundError) {
+    return response.status(error.statusCode).json(error)
+  }
+
+  if (error instanceof UnauthorizedError) {
+    clearSessionCookie(response)
     return response.status(error.statusCode).json(error)
   }
 
@@ -30,6 +35,17 @@ export function setSessionCookie(response: NextApiResponse, sessionToken: string
   const setCookie = cookie.serialize('session_id', sessionToken, {
     path: '/',
     maxAge: EXPIRATION_IN_MILLISECONDS / 1000,
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+  })
+
+  response.setHeader('Set-Cookie', setCookie)
+}
+
+export function clearSessionCookie(response: NextApiResponse) {
+  const setCookie = cookie.serialize('session_id', 'invalid', {
+    path: '/',
+    maxAge: -1,
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
   })

@@ -88,3 +88,30 @@ export async function renewSession(sessionId?: string): Promise<Session> {
 
   return result.rows[0]
 }
+
+export async function expireSessionById(sessionId?: string): Promise<Session> {
+  const result = await query<Session>({
+    text: `
+      UPDATE 
+        sessions
+      SET
+        expires_at = expires_at - interval '1 year',
+        updated_at = NOW()
+      WHERE
+        id = $1
+      RETURNING
+        *
+      ;
+    `,
+    values: [sessionId],
+  })
+
+  if (result.rows.length === 0) {
+    throw new UnauthorizedError({
+      message: 'Session not found.',
+      action: 'Check if user is logged in and try again.',
+    })
+  }
+
+  return result.rows[0]
+}
