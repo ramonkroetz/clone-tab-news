@@ -1,9 +1,15 @@
 import { api } from 'infra/api'
 import { EXPIRATION_IN_MILLISECONDS, type Session } from 'models/session'
 import setCookieParser from 'set-cookie-parser'
-import { clearDatabase, createUserTest, runPendingMigrations, waitForAllServices } from 'tests/orchestrator'
+import {
+  clearDatabase,
+  createSessionTest,
+  createUserTest,
+  runPendingMigrations,
+  waitForAllServices,
+} from 'tests/orchestrator'
 import { version as uuidVersion } from 'uuid'
-import { beforeEach, describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test, vitest } from 'vitest'
 
 type SessionClient = Omit<Session, 'created_at' | 'updated_at' | 'expires_at'> & {
   created_at: string
@@ -146,6 +152,119 @@ describe('POST /api/v1/session', () => {
           maxAge: EXPIRATION_IN_MILLISECONDS / 1000,
           path: '/',
           httpOnly: true,
+        })
+      }
+    })
+  })
+})
+
+describe('DELETE /api/v1/session', () => {
+  describe('Default user', () => {
+    test('With nonexistent session', async () => {
+      const nonExistentToken =
+        'fca60a1e6cd39f46d5719c91a2ece97406bae8d0bea2f5a5aa108671533a0733ada8b2a1fb2f965afc653747752ba0d1'
+
+      const { status, error } = await api('http://localhost:3000/api/v1/session', {
+        method: 'DELETE',
+        headers: {
+          Cookie: `session_id=${nonExistentToken}`,
+        },
+      })
+
+      expect(status).toBe(401)
+      expect(error).toEqual({
+        name: 'UnauthorizedError',
+        message: 'Session not found.',
+        action: 'Check if user is logged in and try again.',
+        status_code: 401,
+      })
+    })
+
+    test('With expired session', async () => {
+      vitest.useFakeTimers({
+        now: new Date(Date.now() - EXPIRATION_IN_MILLISECONDS),
+      })
+
+      const createUser = await createUserTest()
+      const session = await createSessionTest(createUser.id)
+
+      vitest.useRealTimers()
+
+      const { status, error } = await api('http://localhost:3000/api/v1/session', {
+        method: 'DELETE',
+        headers: {
+          Cookie: `session_id=${session.token}`,
+        },
+      })
+
+      expect(status).toBe(401)
+      expect(error).toEqual({
+        name: 'UnauthorizedError',
+        message: 'Session not found.',
+        action: 'Check if user is logged in and try again.',
+        status_code: 401,
+      })
+    })
+
+    test('With valid session', async () => {
+      const createUser = await createUserTest({
+        username: 'UserWithValidSession',
+      })
+
+      const session = await createSessionTest(createUser.id)
+
+      const { data, status, response } = await api<SessionClient>('http://localhost:3000/api/v1/session', {
+        method: 'DELETE',
+        headers: {
+          Cookie: `session_id=${session.token}`,
+        },
+      })
+
+      expect(status).toBe(200)
+      expect(data).not.toBe(null)
+      if (data) {
+        expect(data).toEqual({
+          id: data.id,
+          token: data.token,
+          user_id: createUser.id,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          expires_at: data.expires_at,
+        })
+
+        expect(uuidVersion(createUser.id)).toBe(4)
+        expect(Date.parse(data.created_at)).not.toBeNull()
+        expect(Date.parse(data.updated_at)).not.toBeNull()
+
+        expect(new Date(data.expires_at) < session.expires_at).toEqual(true)
+        expect(new Date(data.updated_at) > session.updated_at).toEqual(true)
+
+        const setCookieHeader = response?.headers.get('set-cookie')
+        const parsedSetCookie = setCookieParser(setCookieHeader ? [setCookieHeader] : [], {
+          map: true,
+        })
+
+        expect(parsedSetCookie.session_id).toEqual({
+          name: 'session_id',
+          value: 'invalid',
+          maxAge: -1,
+          path: '/',
+          httpOnly: true,
+        })
+
+        // Double check assertions
+        const { error, status } = await api('http://localhost:3000/api/v1/user', {
+          headers: {
+            Cookie: `session_id=${session.token}`,
+          },
+        })
+
+        expect(status).toBe(401)
+        expect(error).toEqual({
+          name: 'UnauthorizedError',
+          message: 'Session not found.',
+          action: 'Check if user is logged in and try again.',
+          status_code: 401,
         })
       }
     })

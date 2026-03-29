@@ -36,3 +36,14 @@ export function setSessionCookie(response: NextApiResponse, sessionToken: string
 
   response.setHeader('Set-Cookie', setCookie)
 }
+
+export function clearSessionCookie(response: NextApiResponse) {
+  const setCookie = cookie.serialize('session_id', 'invalid', {
+    path: '/',
+    maxAge: -1,
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+  })
+
+  response.setHeader('Set-Cookie', setCookie)
+}
